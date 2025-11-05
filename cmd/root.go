@@ -15,31 +15,37 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "dirsize",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Use:   "dirsize path",
+	Short: "dirsize",
+	Args:  cobra.MaximumNArgs(1),
+	// SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		defaultPath := "."
+		if len(args) == 1 {
+			defaultPath = args[0]
+		}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) {
-		mainFolder := "/tmp"
-		entries := dir.ReadFolder(mainFolder)
-		entries.PrintRec()
+		hidden, err := cmd.Flags().GetBool("hidden")
+		if err != nil {
+			return err
+		}
+
+		searchConfig := dir.SearchConfig{
+			Hidden: hidden,
+		}
+
+		entries := dir.ReadFolder(defaultPath, searchConfig)
+		// entries.PrintRec()
 
 		tree := ui.GenerateTree(entries)
 
 		if err := tview.NewApplication().SetRoot(tree, true).EnableMouse(true).Run(); err != nil {
 			panic(err)
 		}
+		return nil
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -48,19 +54,5 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dirsize.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().BoolP("hidden", "H", false, "Include hidden files")
 }
-
-// func main() {
-// 	mainFolder := "/home/aaleman/Documents/pruebas"
-// 	totalSize := readFolder(mainFolder)
-// 	fmt.Println(mainFolder, humanSize(int64(totalSize)))
-// }

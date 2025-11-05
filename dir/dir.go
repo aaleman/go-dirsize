@@ -2,8 +2,8 @@ package dir
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -11,6 +11,10 @@ const (
 	ByteUnit  = 1024
 	ByteCount = "KMGTPE"
 )
+
+type SearchConfig struct {
+	Hidden bool
+}
 
 type Entry struct {
 	Name  string
@@ -43,7 +47,13 @@ func (e *Entry) add(newEntry Entry) {
 	e.Size += newEntry.Size
 }
 
-func ReadFolder(name string) *Entry {
+func ReadFolder(name string, searchConfig SearchConfig) *Entry {
+	files, err := os.ReadDir(name)
+	if err != nil {
+		// log.Fatal(err)
+		return nil
+	}
+
 	dirEntry := &Entry{
 		Name:  name,
 		Path:  name,
@@ -52,17 +62,19 @@ func ReadFolder(name string) *Entry {
 		Files: []Entry{},
 	}
 
-	files, err := os.ReadDir(name)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	for _, file := range files {
+		if !searchConfig.Hidden && isHiddenFile(file.Name()) {
+			continue
+		}
+
 		filePath := name + "/" + file.Name()
 		isDir := file.IsDir()
 
 		if file.IsDir() {
-			subfolder := ReadFolder(filePath)
+			subfolder := ReadFolder(filePath, searchConfig)
+			if subfolder == nil {
+				continue
+			}
 			dirEntry.add(*subfolder)
 		} else {
 			info, _ := file.Info()
@@ -83,6 +95,10 @@ func ReadFolder(name string) *Entry {
 
 	}
 
+	slices.SortFunc(dirEntry.Files, func(a, b Entry) int {
+		return int(b.Size) - int(a.Size)
+	})
+
 	return dirEntry
 }
 
@@ -96,4 +112,11 @@ func HumanSize(b int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.2f %ciB", float64(b)/float64(div), ByteCount[exp])
+}
+
+func isHiddenFile(filename string) bool {
+	if filename == "" {
+		return false
+	}
+	return filename[0] == '.'
 }
