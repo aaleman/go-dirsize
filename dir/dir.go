@@ -13,6 +13,7 @@ const (
 )
 
 type Entry struct {
+	Name  string
 	Path  string
 	IsDir bool
 	Size  int64
@@ -21,12 +22,9 @@ type Entry struct {
 
 func (e *Entry) String() string {
 	var sb strings.Builder
-	sb.WriteString(e.Path)
-	sb.WriteString("\t")
+	sb.WriteString(e.Name)
+	sb.WriteString(" ")
 	sb.WriteString(HumanSize(e.Size))
-	if e.IsDir {
-		sb.WriteString(fmt.Sprintf(" [%d files]", len(e.Files)))
-	}
 
 	return sb.String()
 }
@@ -47,6 +45,7 @@ func (e *Entry) add(newEntry Entry) {
 
 func ReadFolder(name string) *Entry {
 	dirEntry := &Entry{
+		Name:  name,
 		Path:  name,
 		IsDir: true,
 		Size:  0,
@@ -72,6 +71,7 @@ func ReadFolder(name string) *Entry {
 			// }
 			infoSize := info.Size()
 			fileEntry := &Entry{
+				Name:  file.Name(),
 				Path:  filePath,
 				IsDir: isDir,
 				Size:  infoSize,
@@ -95,6 +95,5 @@ func HumanSize(b int64) string {
 		div *= ByteUnit
 		exp++
 	}
-	return fmt.Sprintf("%.2f %ciB",
-		float64(b)/float64(div), ByteCount[exp])
+	return fmt.Sprintf("%.2f %ciB", float64(b)/float64(div), ByteCount[exp])
 }

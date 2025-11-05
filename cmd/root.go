@@ -7,7 +7,9 @@ import (
 	"os"
 
 	"aaleman/dirsize/dir"
+	"aaleman/dirsize/ui"
 
+	"github.com/rivo/tview"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +29,12 @@ to quickly create a Cobra application.`,
 		mainFolder := "/tmp"
 		entries := dir.ReadFolder(mainFolder)
 		entries.PrintRec()
-		// fmt.Println(mainFolder, dir.HumanSize(int64(totalSize)))
+
+		tree := ui.GenerateTree(entries)
+
+		if err := tview.NewApplication().SetRoot(tree, true).EnableMouse(true).Run(); err != nil {
+			panic(err)
+		}
 	},
 }
 
