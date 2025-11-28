@@ -13,7 +13,8 @@ const (
 )
 
 type SearchConfig struct {
-	Hidden bool
+	Hidden      bool
+	IgnoreEmpty bool
 }
 
 type Entry struct {
@@ -72,7 +73,7 @@ func ReadFolder(name string, searchConfig SearchConfig) *Entry {
 
 		if file.IsDir() {
 			subfolder := ReadFolder(filePath, searchConfig)
-			if subfolder == nil {
+			if subfolder == nil || (searchConfig.IgnoreEmpty && subfolder.Size == 0) {
 				continue
 			}
 			dirEntry.add(*subfolder)
@@ -82,6 +83,11 @@ func ReadFolder(name string, searchConfig SearchConfig) *Entry {
 			// 	return 0
 			// }
 			infoSize := info.Size()
+
+			if searchConfig.IgnoreEmpty && infoSize == 0 {
+				continue
+			}
+
 			fileEntry := &Entry{
 				Name:  file.Name(),
 				Path:  filePath,

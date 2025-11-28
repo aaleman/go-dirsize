@@ -13,11 +13,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const version = "0.0.1"
+
+var ignoreEmpty = false
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "dirsize path",
-	Short: "dirsize",
-	Args:  cobra.MaximumNArgs(1),
+	Use:     "dirsize path",
+	Short:   "dirsize",
+	Args:    cobra.MaximumNArgs(1),
+	Version: version,
 	// SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		defaultPath := "."
@@ -31,9 +36,9 @@ var rootCmd = &cobra.Command{
 		}
 
 		searchConfig := dir.SearchConfig{
-			Hidden: hidden,
+			Hidden:      hidden,
+			IgnoreEmpty: ignoreEmpty,
 		}
-
 		entries := dir.ReadFolder(defaultPath, searchConfig)
 		// entries.PrintRec()
 
@@ -55,4 +60,5 @@ func Execute() {
 
 func init() {
 	rootCmd.Flags().BoolP("hidden", "H", false, "Include hidden files")
+	rootCmd.Flags().BoolVarP(&ignoreEmpty, "ignore-empty", "e", false, "Ignore empty files and folders")
 }
